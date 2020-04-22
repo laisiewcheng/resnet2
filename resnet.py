@@ -10,11 +10,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
+class LambdaLayer(nn.Module):
+    def __init__(self, lambd):
+        super(LambdaLayer, self).__init__()
+        self.lambd = lambd
+
+    def forward(self, x):
+        return self.lambd(x)
+
+
 #class to define the Bulding Block in ResNet (Figure 5 left in original paper)
 class BuildingBlock(nn.Module):
     expansion = 1
     
-    def __init__(self, in_planes, planes, stride=1):
+    def __init__(self, in_planes, planes, stride=1, option = 'A'):
         super(BuildingBlock, self).__init__()   #constructor
         #first conv layer
         #in_planes is input size, planes is output 
@@ -29,11 +38,22 @@ class BuildingBlock(nn.Module):
         
         
         #define the shortcut connection
+#        self.shortcut = nn.Sequential()
+#        if stride != 1 or in_planes != self.expansion * planes:
+#            self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
+#                                          nn.BatchNorm2d(self.expansion * planes))
+            
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
-            self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
-                                          nn.BatchNorm2d(self.expansion * planes))
+            if option == 'A':
+                self.shortcut = LambdaLayer(lambda x:
+                                            F.pad(x[:, :, ::2, ::2], (0, 0, 0, 0, planes//4, planes//4), "constant", 0))
+           
+            elif option == 'B':
+                self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
+                                              nn.BatchNorm2d(self.expansion * planes))
             
+        
         
     #define the forward pass in the network    
     def forward(self, x):
@@ -49,7 +69,7 @@ class BuildingBlock(nn.Module):
 class BottleNeck(nn.Module):
     expansion = 4
     
-    def __init__(self, in_planes, planes, stride=1):
+    def __init__(self, in_planes, planes, stride=1, option='A'):
         super(BottleNeck, self).__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size = 1, bias = False)
         self.bn1 = nn.BatchNorm2d(planes)
@@ -61,8 +81,13 @@ class BottleNeck(nn.Module):
          #define the shortcut connection
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
-            self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
-                                          nn.BatchNorm2d(self.expansion * planes))
+            if option == 'A':
+                self.shortcut = LambdaLayer(lambda x:
+                                            F.pad(x[:, :, ::2, ::2], (0, 0, 0, 0, planes//4, planes//4), "constant", 0))
+           
+            elif option == 'B':
+                self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
+                                              nn.BatchNorm2d(self.expansion * planes))
             
     
     #define forward pass in BottleNeck building block    
@@ -71,7 +96,7 @@ class BottleNeck(nn.Module):
         output = F.relu(self.bn1(self.conv1(x)))
         output = F.relu(self.bn2(self.conv2(output)))
         output = self.bn3(self.conv3(output))
-        output = output + self.shortcut(x)
+        output = output + self.shortcut(x) #NEED TO FIX HERE
         output = F.relu(output)
         return output
         
@@ -125,8 +150,8 @@ def ResNet101():
 
 
 #run this to check the network architecture 
-#net = ResNet101()
-#print(net)        
+net = ResNet101()
+print(net)        
         
         
         
