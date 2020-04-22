@@ -93,9 +93,12 @@ class BottleNeck(nn.Module):
     #define forward pass in BottleNeck building block    
     def forward(self, x):
         #conv1 --> bn1 --> relu --> conv2 --> bn2 --> relu --> conv3 --> bn3 --> shortcut (input x from conv1 is passed here) --> relu --> output   
+        print('x: ', x.shape())
         output = F.relu(self.bn1(self.conv1(x)))
         output = F.relu(self.bn2(self.conv2(output)))
         output = self.bn3(self.conv3(output))
+        print('output: ', output.shape())
+        print('x2: ', self.shortcut(x).shape())
         output = output + self.shortcut(x) #NEED TO FIX HERE
         output = F.relu(output)
         return output
