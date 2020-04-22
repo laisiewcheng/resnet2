@@ -6,7 +6,9 @@ Created on Tue Apr 21 22:53:41 2020
 """
 import os
 import time
+import shutil
 import argparse
+import torch.utils.data
 import torch
 import torch.nn as nn
 import torchvision
@@ -23,7 +25,7 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
 parser.add_argument('--resume', default='', type=str, metavar='PATH',
                     help='path to latest checkpoint (default: none)')
 #parser.add_argument('--resume', '-r', action = 'store_true', help = 'resume from checkpoint')
-parser.add_argument('-j', '--workers', default=4, type=int, metavar='N',
+parser.add_argument('-j', '--workers', default=0, type=int, metavar='N',
                     help='number of data loading workers (default: 4)')
 parser.add_argument('-b', '--batch-size', default=128, type=int,
                     metavar='N', help='mini-batch size (default: 128)')
@@ -112,7 +114,7 @@ def main():
     
     
     #for training process
-    for epoch in range(args.start_poch, args.epochs):
+    for epoch in range(args.start_epoch, args.epochs):
         
         #for each epoch
         print('current lr {:.5e}'.format(optimizer.param_groups[0]['lr']))
@@ -251,19 +253,20 @@ def save_checkpoint(state, is_best, filename = 'checkpoint.pth.tar'):
 
 #class to store the average and current value
 class AverageMeter(object):
-    def __init_(self):
+    def __init__(self):
         self.reset()
+        print('reset')
         
     def reset(self):
-        self.val = 0;
-        self.avg = 0;
-        self.sum = 0;
-        self.count = 0;
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
         
         
     def update(self, val, n = 1):
         self.val = val
-        self.sum = self.sum + val * n
+        self.sum += val * n
         self.count = self.count + n
         self.avg = self.sum / self.count
         
