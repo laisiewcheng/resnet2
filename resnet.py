@@ -92,7 +92,9 @@ class BottleNeck(nn.Module):
        
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
-             self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
+            print('in_planes: ', in_planes)
+            print('planes: ', planes)
+            self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
                                            nn.BatchNorm2d(self.expansion * planes))
             
     
