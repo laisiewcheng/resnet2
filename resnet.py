@@ -82,6 +82,7 @@ class BottleNeck(nn.Module):
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
             if option == 'A':
+                print('option A')
                 self.shortcut = LambdaLayer(lambda x:
                                             F.pad(x[:, :, ::2, ::2], (0, 0, 0, 0, planes//4, planes//4), "constant", 0))
            
@@ -155,8 +156,8 @@ def ResNet101():
 
 
 #run this to check the network architecture 
-net = ResNet101()
-print(net)        
+#net = ResNet101()
+#print(net)        
         
         
         
