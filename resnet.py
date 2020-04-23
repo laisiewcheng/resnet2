@@ -10,20 +10,20 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class LambdaLayer(nn.Module):
-    def __init__(self, lambd):
-        super(LambdaLayer, self).__init__()
-        self.lambd = lambd
-
-    def forward(self, x):
-        return self.lambd(x)
+#class LambdaLayer(nn.Module):
+#    def __init__(self, lambd):
+#        super(LambdaLayer, self).__init__()
+#        self.lambd = lambd
+#
+#    def forward(self, x):
+#        return self.lambd(x)
 
 
 #class to define the Bulding Block in ResNet (Figure 5 left in original paper)
 class BuildingBlock(nn.Module):
     expansion = 1
     
-    def __init__(self, in_planes, planes, stride=1, option = 'A'):
+    def __init__(self, in_planes, planes, stride=1):
         super(BuildingBlock, self).__init__()   #constructor
         #first conv layer
         #in_planes is input size, planes is output 
@@ -38,20 +38,20 @@ class BuildingBlock(nn.Module):
         
         
         #define the shortcut connection
-#        self.shortcut = nn.Sequential()
-#        if stride != 1 or in_planes != self.expansion * planes:
-#            self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
-#                                          nn.BatchNorm2d(self.expansion * planes))
-            
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
-            if option == 'A':
-                self.shortcut = LambdaLayer(lambda x:
-                                            F.pad(x[:, :, ::2, ::2], (0, 0, 0, 0, planes//4, planes//4), "constant", 0))
-           
-            elif option == 'B':
-                self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
-                                              nn.BatchNorm2d(self.expansion * planes))
+            self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = True),
+                                          nn.BatchNorm2d(self.expansion * planes))
+            
+#        self.shortcut = nn.Sequential()
+#        if stride != 1 or in_planes != self.expansion * planes:
+#            if option == 'A':
+#                self.shortcut = LambdaLayer(lambda x:
+#                                            F.pad(x[:, :, ::2, ::2], (0, 0, 0, 0, planes//4, planes//4), "constant", 0))
+#           
+#            elif option == 'B':
+#                self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
+#                                              nn.BatchNorm2d(self.expansion * planes))
             
         
         
@@ -69,13 +69,13 @@ class BuildingBlock(nn.Module):
 class BottleNeck(nn.Module):
     expansion = 4
     
-    def __init__(self, in_planes, planes, stride=1, option='A'):
+    def __init__(self, in_planes, planes, stride=1):
         super(BottleNeck, self).__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size = 1, bias = False)
         self.bn1 = nn.BatchNorm2d(planes)
-        self.conv2 = nn.Conv2d(planes, planes, kernel_size = 3, stride = stride, padding = 1, bias = False)
+        self.conv2 = nn.Conv2d(planes, planes, kernel_size = 3, stride = stride, padding = 1, bias = True)
         self.bn2 = nn.BatchNorm2d(planes)
-        self.conv3 = nn.Conv2d(planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False)
+        self.conv3 = nn.Conv2d(planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = True)
         self.bn3 = nn.BatchNorm2d(self.expansion * planes)
         
          #define the shortcut connection
@@ -92,9 +92,7 @@ class BottleNeck(nn.Module):
        
         self.shortcut = nn.Sequential()
         if stride != 1 or in_planes != self.expansion * planes:
-            print('in_planes: ', in_planes)
-            print('planes: ', planes)
-            self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
+            self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = True),
                                            nn.BatchNorm2d(self.expansion * planes))
             
     
@@ -109,7 +107,7 @@ class BottleNeck(nn.Module):
         output = self.bn3(self.conv3(output))
         print('output3: ', output.size())
         print('x2: ', self.shortcut(x).size())
-        output = output + self.shortcut(x) #NEED TO FIX HERE
+        output += self.shortcut(x) #NEED TO FIX HERE
         output = F.relu(output)
         return output
         
@@ -119,19 +117,32 @@ class ResNet(nn.Module):
     #num_classes = 10 because of Cifar 10 only has 10 classes
     def __init__(self, block, num_blocks, num_classes=10):
         super(ResNet, self).__init__()
-        self.in_planes = 64
+        #self.in_planes = 64
+        self.in_planes = 16
         
-        self.conv1 = nn.Conv2d(3, 64, kernel_size = 3, stride = 1, padding = 1, bias = False)
-        self.bn1 = nn.BatchNorm2d(64)
+        #for resnet with ImageNet
+#        self.conv1 = nn.Conv2d(3, 64, kernel_size = 3, stride = 1, padding = 1, bias = False)
+#        self.bn1 = nn.BatchNorm2d(64)
+        
+        #for resnet with Cifar10
+        self.conv1 = nn.Conv2d(3, 16, kernel_size = 3, stride = 1, padding = 1, bias = True)
+        self.bn1 = nn.BatchNorm2d(16)
         
         #the four layers where each layer can contain a 
         #BuildingBlock (shortcut in every 2 layers) OR
         #BottleNeck block (shortcut in every 3 layers)
-        self.layer1 = self.create_layer(block, 64, num_blocks[0], stride = 1)
-        self.layer2 = self.create_layer(block, 128, num_blocks[1], stride = 2)
-        self.layer3 = self.create_layer(block, 256, num_blocks[2], stride = 2)
-        self.layer4 = self.create_layer(block, 512, num_blocks[3], stride = 2)
-        self.linear = nn.Linear(512 * block.expansion, num_classes)
+        #for resnet with ImageNet
+#        self.layer1 = self.create_layer(block, 64, num_blocks[0], stride = 1)
+#        self.layer2 = self.create_layer(block, 128, num_blocks[1], stride = 2)
+#        self.layer3 = self.create_layer(block, 256, num_blocks[2], stride = 2)
+#        self.layer4 = self.create_layer(block, 512, num_blocks[3], stride = 2)
+#        self.linear = nn.Linear(512 * block.expansion, num_classes)
+        
+        #for resnet with Cifar10
+        self.layer1 = self.create_layer(block, 16, num_blocks[0], stride=1)
+        self.layer2 = self.create_layer(block, 32, num_blocks[1], stride=2)
+        self.layer3 = self.create_layer(block, 64, num_blocks[2], stride=2)
+        self.linear = nn.Linear(64*block.expansion, num_classes)
         
     
     def create_layer(self, block, planes, num_blocks, stride):
@@ -149,8 +160,7 @@ class ResNet(nn.Module):
         output = self.layer1(output)
         output = self.layer2(output)
         output = self.layer3(output)
-        output = self.layer4(output)
-        output = F.avg_pool2d(output, 4)
+        output = F.avg_pool2d(output, 8)
         output = output.view(output.size(0), -1)
         output = self.linear(output)
         return output
@@ -159,12 +169,13 @@ class ResNet(nn.Module):
 #use BottleNeck blocks
 #layer1 - 3, layer2 - 4, layer3 - 23, layer4 - 3
 def ResNet101():
+    #ResNet(block, num_block, num_classes)
     return ResNet(BottleNeck, [3, 4, 23, 3], num_classes = 10)
 
 
 #run this to check the network architecture 
-#net = ResNet101()
-#print(net)        
+net = ResNet101()
+print(net)        
         
         
         
