@@ -79,16 +79,21 @@ class BottleNeck(nn.Module):
         self.bn3 = nn.BatchNorm2d(self.expansion * planes)
         
          #define the shortcut connection
-        self.shortcut = nn.Sequential()
-        if stride != 1 or in_planes != self.expansion * planes:
-            if option == 'A':
-                print('option A')
-                self.shortcut = LambdaLayer(lambda x:
-                                            F.pad(x[:, :, ::2, ::2], (0, 0, 0, 0, planes//4, planes//4), "constant", 0))
-           
-            elif option == 'B':
-                self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
-                                              nn.BatchNorm2d(self.expansion * planes))
+#        self.shortcut = nn.Sequential()
+#        if stride != 1 or in_planes != self.expansion * planes:
+#            if option == 'A':
+#                print('option A')
+#                self.shortcut = LambdaLayer(lambda x:
+#                                            F.pad(x[:, :, ::2, ::2], (0, 0, 0, 0, planes//4, planes//4), "constant", 0))
+#           
+#            elif option == 'B':
+#                self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
+#                                              nn.BatchNorm2d(self.expansion * planes))
+       
+         self.shortcut = nn.Sequential()
+         if stride != 1 or in_planes != self.expansion * planes:
+            self.shortcut = nn.Sequential(nn.Conv2d(in_planes, self.expansion * planes, kernel_size = 1, stride = stride, bias = False),
+                                          nn.BatchNorm2d(self.expansion * planes))
             
     
     #define forward pass in BottleNeck building block    
