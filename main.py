@@ -18,7 +18,7 @@ import resnet
 
 
 parser = argparse.ArgumentParser(description = 'ResNet101 with CIFAR10 PyTorch')
-parser.add_argument('--epochs', default=200, type=int, metavar='N',
+parser.add_argument('--epochs', default=1, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
