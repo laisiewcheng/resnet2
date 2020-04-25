@@ -16,9 +16,11 @@ import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import resnet
 
+import datetime
+
 
 parser = argparse.ArgumentParser(description = 'ResNet101 with CIFAR10 PyTorch')
-parser.add_argument('--epochs', default=1, type=int, metavar='N',
+parser.add_argument('--epochs', default=10, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--start-epoch', default=0, type=int, metavar='N',
                     help='manual epoch number (useful on restarts)')
@@ -77,7 +79,7 @@ def main():
 #    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
 #                                     std=[0.229, 0.224, 0.225])
     
-     normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
+    normalize = transforms.Normalize(mean=[0.4914, 0.4822, 0.4465],
                                      std=[0.2023, 0.1994, 0.2010])
     
     #setting for for training dataset
@@ -117,6 +119,10 @@ def main():
         return
     
     
+    #print start time for taining
+    starttime = datetime.datetime.now()
+    print ('start time: ', str(starttime))
+    
     #for training process
     for epoch in range(args.start_epoch, args.epochs):
         
@@ -143,6 +149,10 @@ def main():
                          'best_prec': best_prec,},
              is_best_prec, filename = os.path.join(args.save_dir, 'model_resnet101.th'))
         
+    #print end time for taining
+    endtime = datetime.datetime.now()
+    print ('end time: ', str(endtime))
+        
 #define the training process for one epoch
 def train(train_loader, model, criterion, optimizer, epoch):
     
@@ -160,8 +170,10 @@ def train(train_loader, model, criterion, optimizer, epoch):
         #measure loading time
         data_time.update(time.time() - end_time)
         
-        target = target.cuda()
-        input_var = input.cuda()
+        #target = target.cuda()
+        #input_var = input.cuda()
+        target = target
+        input_var = input
         target_var = target
         
         #compute output - need to load input to model ResNet101
@@ -215,9 +227,13 @@ def validate(val_loader, model, criterion):
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
             
-             target = target.cuda()
-             input_var = input.cuda()
-             target_var = target.cuda()
+#             target = target.cuda()
+#             input_var = input.cuda()
+#             target_var = target.cuda()
+             
+             target = target
+             input_var = input
+             target_var = target
              
              #compute output for input
              output = model(input_var)
