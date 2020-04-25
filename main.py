@@ -48,6 +48,14 @@ parser.add_argument('--save-every', dest='save_every',
                     help='Saves checkpoints at every specified number of epochs',
                     type=int, default=10)
 
+ #check if gpu or cpu
+#if torch.cuda.is_available():
+#    device = 'cuda'
+#    print('Use GPU')
+#else:
+#    device = 'cpu'
+#    print('Use CPU')
+
 def main():
     global args, best_prec
     args = parser.parse_args()
@@ -170,11 +178,14 @@ def train(train_loader, model, criterion, optimizer, epoch):
         #measure loading time
         data_time.update(time.time() - end_time)
         
-        #target = target.cuda()
-        #input_var = input.cuda()
-        target = target
-        input_var = input
-        target_var = target
+        if torch.cuda.is_available():
+            target = target.cuda()
+            input_var = input.cuda()
+            target_var = target
+        else:    
+            target = target
+            input_var = input
+            target_var = target
         
         #compute output - need to load input to model ResNet101
         output = model(input_var) #load input to model
@@ -227,13 +238,14 @@ def validate(val_loader, model, criterion):
     with torch.no_grad():
         for i, (input, target) in enumerate(val_loader):
             
-#             target = target.cuda()
-#             input_var = input.cuda()
-#             target_var = target.cuda()
-             
-             target = target
-             input_var = input
-             target_var = target
+             if torch.cuda.is_available():
+                 target = target.cuda()
+                 input_var = input.cuda()
+                 target_var = target.cuda()
+             else:
+                 target = target
+                 input_var = input
+                 target_var = target
              
              #compute output for input
              output = model(input_var)
