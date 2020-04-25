@@ -55,6 +55,8 @@ parser.add_argument('--save-every', dest='save_every',
 #else:
 #    device = 'cpu'
 #    print('Use CPU')
+ 
+f = open("output-resnet.txt", "a")
 
 def main():
     global args, best_prec
@@ -69,17 +71,17 @@ def main():
     #check if gpu or cpu
     if torch.cuda.is_available():
         device = 'cuda'
-        print('Use GPU')
+        print('Use GPU', file = f)
     else:
         device = 'cpu'
-        print('Use CPU')
+        print('Use CPU', file = f)
         
     #load model ResNet101 to device
     model = resnet.ResNet101()
     model = model.to(device)
    
     #can add code to use multi GPU here
-    print('Loaded model to device')
+    print('Loaded model to device', file = f)
     
     #add code here to resume from a checkpoint
         
@@ -129,7 +131,7 @@ def main():
     
     #print start time for taining
     starttime = datetime.datetime.now()
-    print ('start time: ', str(starttime))
+    print ('start time: ', str(starttime), file = f)
     
     #for training process
     for epoch in range(args.start_epoch, args.epochs):
@@ -159,7 +161,7 @@ def main():
         
     #print end time for taining
     endtime = datetime.datetime.now()
-    print ('end time: ', str(endtime))
+    print ('end time: ', str(endtime), file = f)
         
 #define the training process for one epoch
 def train(train_loader, model, criterion, optimizer, epoch):
@@ -219,7 +221,7 @@ def train(train_loader, model, criterion, optimizer, epoch):
                   'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                   'Prec_top1 {top1.val:.3f} ({top1.avg:.3f})'.format(
                           epoch, i, len(train_loader), batch_time = batch_time,
-                          data_time = data_time, loss = losses, top1 = top1))
+                          data_time = data_time, loss = losses, top1 = top1), file = f)
             
             
 
@@ -269,7 +271,7 @@ def validate(val_loader, model, criterion):
                        'Loss {loss.val:.4f} ({loss.avg:.4f})\t'
                        'Prec_top1 {top1.val:.3f} ({top1.avg:.3f})'.format(
                           i, len(val_loader), batch_time = batch_time,
-                          loss = losses, top1 = top1))
+                          loss = losses, top1 = top1), file = f)
                  
     print(' *Prec_top1 {top1.avg:.3f}'.format(top1 = top1))
     
