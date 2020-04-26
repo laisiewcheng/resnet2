@@ -39,7 +39,7 @@ parser.add_argument('--momentum', default=0.9, type=float, metavar='M',
                     help='momentum')
 parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
                     metavar='W', help='weight decay (default: 5e-4)')
-parser.add_argument('-e', '--evaluate', dest='evaluate', action='store_true',
+parser.add_argument('-e', '--evaluate', default = False, dest='evaluate', action='store_true',
                     help='evaluate model on validation set')
 parser.add_argument('--save-dir', dest='save_dir',
                     help='The directory used to save the trained models',
@@ -76,6 +76,11 @@ def main():
         device = 'cpu'
         print('Use CPU', file = f)
         
+#    if args.evaluate:
+#        print('evaluate')
+#    else:
+#        print('not evaluate')   
+#        
     #load model ResNet101 to device
     model = resnet.ResNet101()
     model = model.to(device)
@@ -137,11 +142,15 @@ def main():
     for epoch in range(args.start_epoch, args.epochs):
         
         #for each epoch
-        print('current lr {:.5e}'.format(optimizer.param_groups[0]['lr']))
+        print('current lr {:.5e}'.format(optimizer.param_groups[0]['lr']), file = f)
+        print('Start Training Epoch: ', epoch)
+        print ('Epoch ', epoch, 'start time: ', str(datetime.datetime.now()))
         train(train_loader, model, criterion, optimizer, epoch)
+        print ('Epoch ', epoch, 'end time: ', str(datetime.datetime.now()))
         lr_scheduler.step()
         
         #after one epoch, evaluate using validation set
+        print('Start Validation for Epoch: ', epoch)
         prec = validate(val_loader, model, criterion)
         
         #save the best prec 
